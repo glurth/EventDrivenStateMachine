@@ -1,0 +1,12 @@
+{
+  "name": "com.glurth.eventdrivenstate",
+  "version": "1.0.0",
+  "displayName": "EventDrivenState",
+  "description": "My Package",
+  "unity": "2019.1",
+  "dependencies": {},
+  "author": {
+    "name": "Glurth"
+  },
+  "hideInEditor": "false"
+}
