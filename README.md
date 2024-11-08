@@ -5,7 +5,8 @@ This package provides a simple, event-driven state machine implementation for Un
 All state classes inherit from `EventDrivenState<TEventProviderType>`, providing a simple event-driven and polymorphic approach to state management.
 State changes occur in response to events, which will internally call the two abstract functions (subscribe/unsubscribe) defined by the descendant/user of this class.
 
-Extensions of this base class allow for "layered" States, which can be used to keep several states active at the same time.  In addition a "Revertable" state class can be used which has the ability to record, and restore the previous state.
+Extensions of this base class allow for "layered" states, which can be used to keep several states active at the same time.  In addition, a "Revertable" state class can be used which  
+has the ability to record and restore the previous state.
  
 
 ## Installation
@@ -22,19 +23,18 @@ You can install this package in Unity via GitHub using the Unity Package Manager
 ## Features
 
 - Easily define states: which events they listen to, and what actions to take when those events are triggered.
-- LayeredStates can be applied to any existing state, adding to the events being listened/responded to. They layers can be terminated individually, and will be actiavted/deactived will the state they are applied to.
-- Revertable States allow the user to specify an existsing state, that will be autoatically activated when the revertableState is ready to "revert".  This feature can be use used to create a "stack" of states.
+- LayeredStates can be applied to any existing state, adding to the events being listened/responded to. These layers can be terminated individually, and will be activated/deactivated  
+will the state they are applied to.
+- Revertible States allow the user to specify an existing state, that will be automatically activated when the revertible state is ready to "revert".  This feature can be use used to create a "stack" of states.
 
 ## Usage
 
-The user will derive classes from the abstract state classes in this package.   Each state class defined by the user specifies the events it listens to, and how it reacts to each one. The source of the "driving" events, usually a scene object, must be passed to the constructor of every state. 
-
+The user will derive classes from the abstract state classes in this package.   Each state class defined by the user specifies the events it listens to, and how it reacts to each one.  The source of the "driving" events, usually a scene object, must be passed to the constructor of every state. 
 The events and what function to call when they are triggered is specified by the ISubscriber list return by the user-defined abstract function `GetSubscribers()`
-
 The *current* state is defined by the events are currently subscribed to, rather than being explicitly stored- changing event subscriptions (and reactions) is all that changing state really does. A static function (`ActivateRootState`) is provided to create the initial state.
-
 State transitions are accomplished by calling the `ChangeState` method, and passing in a new instance of the desired state class (which will, in turn, require an instance of its TEventProviderType).  State changes are controlled within each state class in response to events, as defined by the user, allowing for dynamic transitions based on events.
-Normal `ChangeState` calls will deactivate (unsubscribe) the current state, and activate the new state.  Optionally, one may instead use `LayerNewState` (if the new state is derived from `EventDrivenStateLayer`), in which case the current state will not be deactived, and the new state will be activated.
+Normal `ChangeState` calls will deactivate (unsubscribe) the current state, and activate the new state.  Optionally, one may instead use `LayerNewState` (if the new state is derived  
+from `EventDrivenStateLayer`), in which case the current state will not be deactivated, and the new state will be activated.
 
 
 ### Unity
@@ -46,7 +46,9 @@ Non-generic, but still abstract classes using this subscriber exist for each bas
 
 ### Important condiserations
 - The subscribe/unsubscribe functions can implement polymorphic behavior, but the hierarchy must use the same TEventProviderType to do this. 
-- It is recommended that state DATA, particularly data that will need to be saved, be stored in a different class as serialization of states is not handled.  User Defined classes can add a parameter for State Data to their constructor, if desired.
+- It is recommended that state DATA, particularly data that will need to be saved, be stored in a different class as serialization of states is not handled.  User Defined classes can  
+add a parameter for State Data to their constructor, if desired.
+- One can derive from any existing state, to ADD to the set of events and responses provided by overriding `GetSubscribers()`, starting the returned list with `base.GetSubscribers()`'. (This would, effectively, function like a single layered state)
 
 ### Setting up a State Machine
 
@@ -134,4 +136,4 @@ Feel free to fork this repository, submit pull requests, or open issues. Contrib
 
 ## License
 
-No Lincense without written permission, usually given.
+No License without written permission, usually given.
