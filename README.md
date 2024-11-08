@@ -29,10 +29,14 @@ will the state they are applied to.
 
 ## Usage
 
-The user will derive classes from the abstract state classes in this package.   Each state class defined by the user specifies the events it listens to, and how it reacts to each one.  The source of the "driving" events, usually a scene object, must be passed to the constructor of every state. 
+The user will derive classes from the abstract state classes in this package.   Each state class defined by the user specifies the events it listens to, and how it reacts to each one.  The source of the "driving" events, usually a scene object, must be passed to the constructor of every state.
+ 
 The events and what function to call when they are triggered is specified by the ISubscriber list return by the user-defined abstract function `GetSubscribers()`
+
 The *current* state is defined by the events are currently subscribed to, rather than being explicitly stored- changing event subscriptions (and reactions) is all that changing state really does. A static function (`ActivateRootState`) is provided to create the initial state.
+
 State transitions are accomplished by calling the `ChangeState` method, and passing in a new instance of the desired state class (which will, in turn, require an instance of its TEventProviderType).  State changes are controlled within each state class in response to events, as defined by the user, allowing for dynamic transitions based on events.
+
 Normal `ChangeState` calls will deactivate (unsubscribe) the current state, and activate the new state.  Optionally, one may instead use `LayerNewState` (if the new state is derived  
 from `EventDrivenStateLayer`), in which case the current state will not be deactivated, and the new state will be activated.
 
