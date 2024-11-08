@@ -25,115 +25,82 @@ You can install this package in Unity via GitHub using the Unity Package Manager
 
 ### Setting up a State Machine
 
-You can define a state machine that controls the behavior of an object (like a character) with the following example.
+You can define a state machine that controls the behavior of an object with the following example.
 
 ```
-using UnityEngine;
-using System;
+    public class MenuState : UnityEventDrivenState
+    {
+        GameStateData gameData;
+        SceneUIObjects sceneObjects;
 
-public class CharacterController : MonoBehaviour
-{
- private StateMachine _stateMachine;
+        public MenuState(GameStateData gameData, SceneUIObjects sceneObjects)
+        {
+            this.gameData = gameData;
+            this.sceneObjects = sceneObjects;
 
- void Start()
- {
-     _stateMachine = new StateMachine("Idle");
+        }
+        protected override List<UnityEventSubscription> GetSubscribers()
+        {
+            return new List<UnityEventSubscription>()
+            {
+                new UnityEventSubscription(sceneObjects.menuWindow.newGame.onClick,HandleNewGameClick),
+                new UnityEventSubscription(sceneObjects.menuWindow.saveGame.onClick,HandleSaveGameClick),
+                new UnityEventSubscription(sceneObjects.menuWindow.quitGame.onClick,HandleQuitGameClick),
+            };
+        }
+        protected override void HandleActivateState() 
+        {
+            sceneObjects.menuWindow.gameObject.SetActive(true);
+            sceneObjects.menuWindow.saveGame.interactable = gameData.gameStarted;
+        }
+        protected override void HandleDeActivateState() 
+        {
+            sceneObjects.menuWindow.gameObject.SetActive(false);
+        }
+        void HandleNewGameClick()
+        {
+            UnityEvent initCompleteTrigger = new UnityEvent();
+            ChangeState(new WaitScreenForProcess(sceneObjects.waitDisplay,this, initCompleteTrigger));
+            System.Threading.Tasks.Task.Run(gameData.InitForNewGame).ContinueWith((o)=> { initCompleteTrigger.Invoke(); });
+            //will not be awaited.  instead the initCompleteTrigger will be invoked when done.
+        }
+        void HandleSaveGameClick()
+        {
+            ChangeState(new SaveGameMenuState(gameData, sceneObjects));
+        }
+        void HandleQuitGameClick()
+        {
+            UnityEngine.Application.Quit();
+        }
+    }``
 
-     // Define states with actions
-     _stateMachine.AddState("Idle", () => { Debug.Log("Character is idle"); });
-     _stateMachine.AddState("Walking", () => { Debug.Log("Character is walking"); });
-     _stateMachine.AddState("Running", () => { Debug.Log("Character is running"); });
+    public class WaitScreenForProcess : UnityRevertibleEventDrivenState
+    {
 
-     // Execute the initial state
-     _stateMachine.ExecuteCurrentState();
- }
+        WaitThingy waitDisplay;
+        UnityEvent processIsCompleteTrigger;
+        public WaitScreenForProcess(WaitThingy waitDisplay, UnityEventDrivenState stateToChangeToWhenComplete, UnityEvent processIsCompleteTrigger):base(stateToChangeToWhenComplete)
+        {
+            this.waitDisplay = waitDisplay;
+            this.processIsCompleteTrigger = processIsCompleteTrigger;
+        }
+        protected override List<UnityEventSubscription> GetSubscribers()
+        {
+            return new List<UnityEventSubscription>()
+            {
+                 new UnityEventSubscription(processIsCompleteTrigger,()=>{Revert();}),
+            };
+        }
+        protected override void HandleActivateState()
+        {
+            waitDisplay.gameObject.SetActive(true);
+        }
+        protected override void HandleDeActivateState()
+        {
+            waitDisplay.gameObject.SetActive(false);
+        }
 
- void Update()
- {
-     // Switch states based on some conditions (e.g., user input)
-     if (Input.GetKeyDown(KeyCode.W))
-     {
-         _stateMachine.SwitchState("Walking");
-         _stateMachine.ExecuteCurrentState();
-     }
-     else if (Input.GetKeyDown(KeyCode.R))
-     {
-         _stateMachine.SwitchState("Running");
-         _stateMachine.ExecuteCurrentState();
-     }
- }
-}
-```
-
-### StateMachine Class
-
-```
-public class StateMachine
-{
- private readonly Dictionary<string, Action> _states = new Dictionary<string, Action>();
- private string _currentState;
-
- public StateMachine(string initialState)
- {
-     _currentState = initialState;
- }
-
- public void AddState(string stateName, Action stateAction)
- {
-     if (!_states.ContainsKey(stateName))
-     {
-         _states.Add(stateName, stateAction);
-     }
-     else
-     {
-         throw new InvalidOperationException($"State '{stateName}' already exists.");
-     }
- }
-
- public void SwitchState(string newState)
- {
-     if (!_states.ContainsKey(newState))
-     {
-         throw new InvalidOperationException($"State '{newState}' does not exist.");
-     }
-
-     _currentState = newState;
- }
-
- public void ExecuteCurrentState()
- {
-     if (_states.ContainsKey(_currentState))
-     {
-         _states[_currentState].Invoke();
-     }
-     else
-     {
-         throw new InvalidOperationException($"State '{_currentState}' not found in state machine.");
-     }
- }
-}
-```
-
-### State Definitions
-
-- **AddState**: Add a state with a corresponding action to be executed.
-- **SwitchState**: Switch to another state by name.
-- **ExecuteCurrentState**: Invoke the action of the current state.
-
-## API Reference
-
-### StateMachine Class
-
-- `StateMachine(string initialState)`: Initializes the state machine with an initial state.
-- `AddState(string stateName, Action stateAction)`: Adds a new state with the specified name and action.
-- `SwitchState(string newState)`: Switches to a new state by name.
-- `ExecuteCurrentState()`: Executes the action of the current state.
-
-### Example of Adding States:
-
-```
-stateMachine.AddState("Running", () => { Debug.Log("The character is now running."); });
-stateMachine.AddState("Jumping", () => { Debug.Log("The character is jumping."); });
+    }
 ```
 
 ## Contributing
@@ -142,4 +109,4 @@ Feel free to fork this repository, submit pull requests, or open issues. Contrib
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+No Lincense without written permission, usually given.
