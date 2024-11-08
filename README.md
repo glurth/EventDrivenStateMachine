@@ -20,6 +20,12 @@ You can install this package in Unity via GitHub using the Unity Package Manager
    https://github.com/glurth/EventDrivenStateMachine.git
 5. Click **Add**. The package will be installed into your Unity project.
 
+## Dependancies
+
+- .Net
+- UnityEngine
+
+
 ## Features
 
 - Easily define states: which events they listen to, and what actions to take when those events are triggered.
@@ -42,7 +48,7 @@ from `EventDrivenStateLayer`), in which case the current state will not be deact
 
 
 ### Unity
-Unity specific variants of the base classes use a concrete class to implement ``ISubscriber`, called ``UnityEventSubscription``.  
+Unity specific variants of the base classes use a concrete class to implement `ISubscriber`, called `UnityEventSubscription`.  
 Non-generic, but still abstract classes using this subscriber exist for each base class yielding: 
 - `UnityEventDrivenState` 
 - `UnityEventDrivenStateLayer`
