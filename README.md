@@ -1,88 +1,144 @@
-# Project: Enum Control for Unity
+# EventDrivenStateMachine
 
-This Unity project is designed to handle enum values in a type-safe manner using the `EnumControl` class. It allows you to manage enum selections efficiently, improving code clarity and performance. The project also focuses on reducing unnecessary allocations, such as Dropdown.OptionData creation, for improved performance in Unity-based UI applications.
-
-## Features
-
-- **Enum-based Control**: The `EnumControl` class provides a UI interface for selecting enum values.
-- **Type Safety**: The system ensures type safety for enum handling.
-- **Performance Optimization**: Caches enum values and their string names to reduce allocations during runtime.
+This package provides a simple, event-driven state machine implementation for Unity. It allows you to manage different states and switch between them based on events, perfect for implementing game behaviors like character states (Idle, Walking, Running, etc.).
 
 ## Installation
 
-1. Download or clone the repository.
-2. Import the necessary scripts into your Unity project.
-3. Add the `EnumControl` component to your UI and configure it to work with your enum.
+You can install this package in Unity via GitHub using the Unity Package Manager.
 
-## EnumControl Class
+1. Open Unity and navigate to the **Package Manager** (Window > Package Manager).
+2. In the Package Manager window, click on the `+` button in the top-left corner.
+3. Select **Add package from Git URL...**.
+4. Paste the following GitHub URL into the dialog:
+   https://github.com/glurth/EventDrivenStateMachine.git
 
-The `EnumControl` class allows you to bind a UI dropdown to an enum type. Here's an example of how to use it:
+5. Click **Add**. The package will be installed into your Unity project.
 
-```csharp
+## Features
+
+- Easily define and manage states.
+- Switch between states with custom actions.
+- Execute state-specific behavior by invoking state actions.
+- Simple interface for adding and switching states.
+
+## Example Usage
+
+### Setting up a State Machine
+
+You can define a state machine that controls the behavior of an object (like a character) with the following example.
+
+```
 using UnityEngine;
-using UnityEngine.UI;
+using System;
 
-public class ExampleEnumControl : MonoBehaviour
+public class CharacterController : MonoBehaviour
 {
-    public EnumControl enumControl;
+ private StateMachine _stateMachine;
 
-    public enum MyEnum
-    {
-        Option1,
-        Option2,
-        Option3
-    }
+ void Start()
+ {
+     _stateMachine = new StateMachine("Idle");
 
-    void Start()
-    {
-        // Bind the enum to the EnumControl dropdown
-        enumControl.SetupEnum<MyEnum>();
-    }
+     // Define states with actions
+     _stateMachine.AddState("Idle", () => { Debug.Log("Character is idle"); });
+     _stateMachine.AddState("Walking", () => { Debug.Log("Character is walking"); });
+     _stateMachine.AddState("Running", () => { Debug.Log("Character is running"); });
+
+     // Execute the initial state
+     _stateMachine.ExecuteCurrentState();
+ }
+
+ void Update()
+ {
+     // Switch states based on some conditions (e.g., user input)
+     if (Input.GetKeyDown(KeyCode.W))
+     {
+         _stateMachine.SwitchState("Walking");
+         _stateMachine.ExecuteCurrentState();
+     }
+     else if (Input.GetKeyDown(KeyCode.R))
+     {
+         _stateMachine.SwitchState("Running");
+         _stateMachine.ExecuteCurrentState();
+     }
+ }
 }
 ```
 
-In this example, `EnumControl` will dynamically generate a dropdown based on the `MyEnum` values. The enum values are type-safe and their string representations are cached for better performance.
+### StateMachine Class
 
-## Performance Considerations
-
-### Caching Enum Values
-
-The `EnumControl` class caches the enum names and values for efficient access, reducing the overhead of constantly calling `Enum.GetValues()` or `Enum.GetName()` at runtime. This is particularly useful for frequently updated UIs, such as those used in gameplay menus or settings screens.
-
-### Dropdown.OptionData Optimization
-
-To minimize memory allocations, we avoid creating new `Dropdown.OptionData` objects unless necessary. Instead, we utilize a pre-allocated list of `OptionData` that can be reused during UI updates.
-
-### Example: Performance-Optimized Dropdown
-
-```csharp
-public class EnumDropdown : MonoBehaviour
+```
+public class StateMachine
 {
-    public Dropdown dropdown;
+ private readonly Dictionary<string, Action> _states = new Dictionary<string, Action>();
+ private string _currentState;
 
-    private void Start()
-    {
-        // Setup enum dropdown without unnecessary allocations
-        var enumOptions = Enum.GetValues(typeof(MyEnum))
-            .Cast<MyEnum>()
-            .Select(e => new Dropdown.OptionData(e.ToString()))
-            .ToList();
+ public StateMachine(string initialState)
+ {
+     _currentState = initialState;
+ }
 
-        dropdown.AddOptions(enumOptions);
-    }
+ public void AddState(string stateName, Action stateAction)
+ {
+     if (!_states.ContainsKey(stateName))
+     {
+         _states.Add(stateName, stateAction);
+     }
+     else
+     {
+         throw new InvalidOperationException($"State '{stateName}' already exists.");
+     }
+ }
+
+ public void SwitchState(string newState)
+ {
+     if (!_states.ContainsKey(newState))
+     {
+         throw new InvalidOperationException($"State '{newState}' does not exist.");
+     }
+
+     _currentState = newState;
+ }
+
+ public void ExecuteCurrentState()
+ {
+     if (_states.ContainsKey(_currentState))
+     {
+         _states[_currentState].Invoke();
+     }
+     else
+     {
+         throw new InvalidOperationException($"State '{_currentState}' not found in state machine.");
+     }
+ }
 }
 ```
 
-## Troubleshooting
+### State Definitions
 
-- **Enum Control Not Displaying Properly**: Ensure that the `EnumControl` component is attached to a GameObject with a `Dropdown` UI element.
-- **Null Reference Errors**: Verify that the enum type is properly passed into the `SetupEnum` method.
+- **AddState**: Add a state with a corresponding action to be executed.
+- **SwitchState**: Switch to another state by name.
+- **ExecuteCurrentState**: Invoke the action of the current state.
 
-## Future Improvements
+## API Reference
 
-- Add support for custom labels or values for each enum entry.
-- Improve error handling and validation for unsupported enum types.
-- Extend functionality to handle more UI controls (e.g., toggles or sliders) for enums with ranges.
+### StateMachine Class
+
+- `StateMachine(string initialState)`: Initializes the state machine with an initial state.
+- `AddState(string stateName, Action stateAction)`: Adds a new state with the specified name and action.
+- `SwitchState(string newState)`: Switches to a new state by name.
+- `ExecuteCurrentState()`: Executes the action of the current state.
+
+### Example of Adding States:
+
+```
+stateMachine.AddState("Running", () => { Debug.Log("The character is now running."); });
+stateMachine.AddState("Jumping", () => { Debug.Log("The character is jumping."); });
+```
+
+## Contributing
+
+Feel free to fork this repository, submit pull requests, or open issues. Contributions are welcome!
 
 ## License
 
