@@ -253,43 +253,6 @@ namespace EyE.StateMachine
         }
     }
 
-    /// <summary>
-    /// Derive from this class to create a "State" in the stack-based state machine.  All the derived/variants classes will define the different states of the statemachine.
-    /// Override the eventsAndHandlers get accessor to define what events to listen to, and what action to take when they are triggered, for a given state.
-    /// It is expected that derived variants will define a constructor with a(some) parameter(s) that will provide access to scene objects that generate the events it needs to subscribe to.
-    /// When a given state is activated, it's events are subscribed to, but previous states on the stack ALSO remain subscribed.
-    /// The current state is defined by which events are currently subscribed to, it is not actually stored anywhere specific- the stack only contains previous/super states.
-    /// Rather than using polymorphism, this state machine will use the stack itself to define it's hierarchy of super/sub states by keeping all states, that are on the stack, subscribed to their events (until popped).
-    /// </summary>
-    abstract public class StackedEventDrivenState<TEventSubscriber> : SubscriptionSetManager<TEventSubscriber> where TEventSubscriber : ISubscriber
-    {
-        protected Stack<StackedEventDrivenState<TEventSubscriber>> stateStack;// stores previous states- the current state is not kept on the stack
-
-        public static void ActivateRootState(StackedEventDrivenState<TEventSubscriber> newState)
-        {
-            newState.SubscribeToAll();
-            newState.stateStack = new Stack<StackedEventDrivenState<TEventSubscriber>>();
-            //newState.stateStack.Push(newState);
-        }
-
-        //change state to the sub-state provided
-        public void Push(StackedEventDrivenState<TEventSubscriber> newState)
-        {
-            stateStack.Push(this);
-            newState.stateStack = stateStack;
-            newState.HandleActivateState();
-            newState.SubscribeToAll();
-        }
-        //Reverts to the previous state and returns it.
-        public StackedEventDrivenState<TEventSubscriber> Pop()
-        {
-            UnSubscribeFromAll();
-            HandleDeActivateState();
-            return stateStack.Pop();
-        }
-        protected virtual void HandleActivateState() { }
-        protected virtual void HandleDeActivateState() { }
-    }
 
     //examples
     //class used to store an Event and a function to invoke when the event is triggered
@@ -329,13 +292,14 @@ namespace EyE.StateMachine
     }
 
     abstract public class UnityEventDrivenState : EventDrivenState<UnityEventSubscription> { }
-    abstract public class RevertibleUnityEventDrivenState : RevertibleEventDrivenState<UnityEventSubscription>
+    abstract public class UnityRevertibleEventDrivenState : RevertibleEventDrivenState<UnityEventSubscription>
     {
-        protected RevertibleUnityEventDrivenState(EventDrivenState<UnityEventSubscription> stateToRevertTo) : base(stateToRevertTo)
+        protected UnityRevertibleEventDrivenState(EventDrivenState<UnityEventSubscription> stateToRevertTo) : base(stateToRevertTo)
         {
         }
     }
-    abstract public class StackedUnityEventDrivenState : StackedEventDrivenState<UnityEventSubscription> { }
+
+
     //sample gameState class- contains data about the state of the game, and has function to load/save/start new
     public class GameStateData
     {
@@ -451,7 +415,7 @@ namespace EyE.StateMachine.Samples
         }
     }
 
-    public class WaitScreenForProcess : RevertibleUnityEventDrivenState
+    public class WaitScreenForProcess : UnityRevertibleEventDrivenState
     {
 
         WaitThingy waitDisplay;
