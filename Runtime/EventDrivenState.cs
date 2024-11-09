@@ -92,13 +92,13 @@ namespace EyE.StateMachine
     /// It is expected that some events will trigger a change in state, which is done by derived classes calling "ChangeState" and passing in a new Instance of the state that should be switched to.
     /// Polymorphism may be used to define super-states and sub-states using the GetSubscribers member, with descendants adding more pairs to the list (just make sure you call your base version also.)
     /// </summary>
-    abstract public class EventDrivenState<TEventSubscriber> : SubscriptionSetManager where TEventSubscriber : ISubscriber
+    abstract public class EventDrivenState : SubscriptionSetManager
     {
         /// <summary>
         /// Static function used to create a state that does not comes from another state.  Usually this is a "root" state, which will when appropriate/eventually generate all other states.
         /// </summary>
         /// <param name="newState">Instance of a root state.</param>
-        public static void ActivateRootState(EventDrivenState<TEventSubscriber> newState)
+        public static void ActivateRootState(EventDrivenState newState)
         {
             newState.HandleActivateState();
             newState.SubscribeToAll();
@@ -111,7 +111,7 @@ namespace EyE.StateMachine
         /// Activates the specified state, subscribes to events it specifies, and activate any layered states it may have.
         /// </summary>
         /// <param name="newState">the new state to be activated</param>
-        protected void ChangeState(EventDrivenState<TEventSubscriber> newState)
+        protected void ChangeState(EventDrivenState newState)
         {
             TerminateLayerStates();
             HandleDeActivateState();
@@ -126,7 +126,7 @@ namespace EyE.StateMachine
         /// <summary>
         /// Stores the List of states layered on this one.
         /// </summary>
-        private List<EventDrivenStateLayer<TEventSubscriber>> layeredStates = new List<EventDrivenStateLayer<TEventSubscriber>>();
+        private List<EventDrivenStateLayer> layeredStates = new List<EventDrivenStateLayer>();
 
         /// <summary>
         /// Call this function to add activate an additional EventDrivenStateLayer(set of event listeners) to this one.
@@ -134,13 +134,13 @@ namespace EyE.StateMachine
         /// Does not check for duplicates, will throw an exception if provided instance is already layered on this state.
         /// </summary>
         /// <param name="newState">layered state instance to put on `this` state</param>
-        protected void LayerNewState(EventDrivenStateLayer<TEventSubscriber> newState)
+        protected void LayerNewState(EventDrivenStateLayer newState)
         {
             newState.HandleActivateState();
             newState.SubscribeToAll();
             layeredStates.Add(newState);
         }
-        public void NotifyLayerTerminated(EventDrivenStateLayer<TEventSubscriber> layerState)
+        public void NotifyLayerTerminated(EventDrivenStateLayer layerState)
         {
             bool ignore=layeredStates.Remove(layerState);
         }
@@ -149,7 +149,7 @@ namespace EyE.StateMachine
         /// </summary>
         void ActivateLayerStates()
         {
-            foreach (EventDrivenStateLayer<TEventSubscriber> stateLayer in layeredStates)
+            foreach (EventDrivenStateLayer stateLayer in layeredStates)
             {
                 stateLayer.HandleActivateState();
                 stateLayer.SubscribeToAll();
@@ -160,7 +160,7 @@ namespace EyE.StateMachine
         /// </summary>
         void TerminateLayerStates()
         {
-            foreach (EventDrivenStateLayer<TEventSubscriber> stateLayer in layeredStates)
+            foreach (EventDrivenStateLayer stateLayer in layeredStates)
             {
                 stateLayer.Terminate();
             }
@@ -182,11 +182,11 @@ namespace EyE.StateMachine
     /// The state it is layered upon needs to be notified when this state is terminated, and so the constructor requires it as a parameter.
     /// </summary>
     /// <typeparam name="TEventSubscriber"></typeparam>
-    abstract public class EventDrivenStateLayer<TEventSubscriber> : EventDrivenState<TEventSubscriber> where TEventSubscriber : ISubscriber
+    abstract public class EventDrivenStateLayer : EventDrivenState 
     {
-        EventDrivenState<TEventSubscriber> nofityOnTerminate;
+        EventDrivenState nofityOnTerminate;
 
-        protected EventDrivenStateLayer(EventDrivenState<TEventSubscriber> nofityOnTerminate)
+        protected EventDrivenStateLayer(EventDrivenState nofityOnTerminate)
         {
             this.nofityOnTerminate = nofityOnTerminate;
         }
@@ -205,11 +205,11 @@ namespace EyE.StateMachine
     /// Can used like a stack by passing "this" to constructor.
     /// </summary>
     /// <typeparam name="TEventSubscriber"></typeparam>
-    abstract public class RevertibleEventDrivenState<TEventSubscriber> : EventDrivenState<TEventSubscriber> where TEventSubscriber : ISubscriber
+    abstract public class RevertibleEventDrivenState : EventDrivenState
     {
-        EventDrivenState<TEventSubscriber> stateToRevertTo;
+        EventDrivenState stateToRevertTo;
 
-        protected RevertibleEventDrivenState(EventDrivenState<TEventSubscriber> stateToRevertTo)
+        protected RevertibleEventDrivenState(EventDrivenState stateToRevertTo)
         {
             this.stateToRevertTo = stateToRevertTo;
         }
@@ -222,7 +222,7 @@ namespace EyE.StateMachine
         }
     }
 
-    #region UnitySates
+    #region UnityISubscribers
     /// <summary>
     /// Class used to store a `UnityEvent` and `UnityAction` (that are passed to the constructor) to invoke when the event is triggered
     /// The ISubscriber required functions, Subscribe and Unsubscribe, add/remove the actions (if not null) as listeners to the events (if not null).
@@ -288,24 +288,7 @@ namespace EyE.StateMachine
                 triggerWithData.RemoveListener(handlerWithData);
         }
     }
-    /// <summary>
-    /// Non-generic version of EventDrivenState using UnityEventSubscription.
-    /// </summary>
-    abstract public class UnityEventDrivenState : EventDrivenState<UnityEventSubscription> { }
-    /// <summary>
-    /// Non-generic version of EventDrivenStateLayer using UnityEventSubscription.
-    /// </summary>
-    abstract public class UnityEventDrivenStateLayer : EventDrivenStateLayer<UnityEventSubscription>
-    {
-        protected UnityEventDrivenStateLayer(EventDrivenState<UnityEventSubscription> layeredOnState) : base(layeredOnState) { }
-    }
-    /// <summary>
-    /// Non-generic version of RevertibleEventDrivenState using UnityEventSubscription.
-    /// </summary>
-    abstract public class UnityRevertibleEventDrivenState : RevertibleEventDrivenState<UnityEventSubscription>
-    {
-        protected UnityRevertibleEventDrivenState(EventDrivenState<UnityEventSubscription> stateToRevertTo) : base(stateToRevertTo) { }
-    }
+   
     #endregion
 }
 

@@ -28,7 +28,7 @@ namespace EyE.StateMachine.Samples
         //other stuff...
     }
 
-    public class MenuState : UnityEventDrivenState
+    public class MenuState : EventDrivenState
     {
         GameStateData gameData;
         SceneUIObjectReferences sceneObjects;
@@ -80,7 +80,7 @@ namespace EyE.StateMachine.Samples
         }
     }
 
-    public class SaveGameMenuState : UnityEventDrivenState
+    public class SaveGameMenuState : EventDrivenState
     {
         SceneUIObjectReferences sceneObjects;
         GameStateData gameData;
@@ -95,8 +95,12 @@ namespace EyE.StateMachine.Samples
         {
             return new List<ISubscriber>()
             {
-                new UnityDataEventSubscription<string>(sceneObjects.fileNameWindow.fileNameSelectedEvent, HandleSaveFileString),
-                new UnityEventSubscription(sceneObjects.fileNameWindow.cancelEvent,Cancel),
+                new UnityDataEventSubscription<string>(
+                    trigger: sceneObjects.fileNameWindow.fileNameSelectedEvent, 
+                    handler: HandleSaveFileString),
+                new UnityEventSubscription(
+                    sceneObjects.fileNameWindow.cancelEvent,
+                    Cancel),
             };
         }
         protected override void HandleActivateState()
@@ -123,12 +127,12 @@ namespace EyE.StateMachine.Samples
         }
     }
 
-    public class WaitScreenForProcess : UnityRevertibleEventDrivenState
+    public class WaitScreenForProcess : RevertibleEventDrivenState
     {
 
         WaitThingy waitDisplay;
         UnityEvent processIsCompleteTrigger;
-        public WaitScreenForProcess(WaitThingy waitDisplay, UnityEventDrivenState stateToChangeToWhenComplete, UnityEvent processIsCompleteTrigger) : base(stateToChangeToWhenComplete)
+        public WaitScreenForProcess(WaitThingy waitDisplay, EventDrivenState stateToRevertTo, UnityEvent processIsCompleteTrigger) : base(stateToRevertTo)
         {
             this.waitDisplay = waitDisplay;
             this.processIsCompleteTrigger = processIsCompleteTrigger;
@@ -137,7 +141,9 @@ namespace EyE.StateMachine.Samples
         {
             return new List<ISubscriber>()
             {
-                 new UnityEventSubscription(processIsCompleteTrigger,()=>{Revert();}),
+                 new UnityEventSubscription(
+                     trigger: processIsCompleteTrigger,
+                     handler: ()=>{Revert();}),
             };
         }
         protected override void HandleActivateState()
@@ -151,7 +157,7 @@ namespace EyE.StateMachine.Samples
 
     }
 
-    public class UserConfirm : UnityEventDrivenState
+    public class UserConfirm : EventDrivenState
     {
         YesNoWindow yesnoDisplay;
         UnityAction yesHandler;
