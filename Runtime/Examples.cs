@@ -39,13 +39,19 @@ namespace EyE.StateMachine.Samples
             this.sceneObjects = sceneObjects;
 
         }
-        protected override List<UnityEventSubscription> GetSubscribers()
+        protected override List<ISubscriber> GetSubscribers()
         {
-            return new List<UnityEventSubscription>()
+            return new List<ISubscriber>()
             {
-                new UnityEventSubscription(sceneObjects.menuWindow.newGame.onClick,HandleNewGameClick),
-                new UnityEventSubscription(sceneObjects.menuWindow.saveGame.onClick,HandleSaveGameClick),
-                new UnityEventSubscription(sceneObjects.menuWindow.quitGame.onClick,HandleQuitGameClick),
+                new UnityEventSubscription(
+                    trigger: sceneObjects.menuWindow.newGame.onClick,
+                    handler: HandleNewGameClick),
+                new UnityEventSubscription(
+                    sceneObjects.menuWindow.saveGame.onClick,
+                    HandleSaveGameClick),
+                new UnityEventSubscription(
+                    sceneObjects.menuWindow.quitGame.onClick,
+                    HandleQuitGameClick),
             };
         }
         protected override void HandleActivateState()
@@ -85,11 +91,11 @@ namespace EyE.StateMachine.Samples
             this.sceneObjects = sceneObjects;
 
         }
-        protected override List<UnityEventSubscription> GetSubscribers()
+        protected override List<ISubscriber> GetSubscribers()
         {
-            return new List<UnityEventSubscription>()
+            return new List<ISubscriber>()
             {
-                new UnityEventSubscription(sceneObjects.fileNameWindow.fileNameSelectedEvent,HandleSaveFile),//example using an event/handler that passes/takes a data object.
+                new UnityDataEventSubscription<string>(sceneObjects.fileNameWindow.fileNameSelectedEvent, HandleSaveFileString),
                 new UnityEventSubscription(sceneObjects.fileNameWindow.cancelEvent,Cancel),
             };
         }
@@ -105,7 +111,8 @@ namespace EyE.StateMachine.Samples
         {
             ChangeState(new MenuState(gameData, sceneObjects)); //return to the main menu state
         }
-        void HandleSaveFile(object filename)
+
+        void HandleSaveFileString(string filename)
         {
             UnityEvent saveCompleteCallback = new UnityEvent();// this will be passed to the new WaitScreenForProcess state (which will listen to it), and to the SaveToFile function (which will trigger it when done).
             ChangeState(new WaitScreenForProcess(sceneObjects.waitDisplay, new MenuState(gameData, sceneObjects), saveCompleteCallback));
@@ -126,9 +133,9 @@ namespace EyE.StateMachine.Samples
             this.waitDisplay = waitDisplay;
             this.processIsCompleteTrigger = processIsCompleteTrigger;
         }
-        protected override List<UnityEventSubscription> GetSubscribers()
+        protected override List<ISubscriber> GetSubscribers()
         {
-            return new List<UnityEventSubscription>()
+            return new List<ISubscriber>()
             {
                  new UnityEventSubscription(processIsCompleteTrigger,()=>{Revert();}),
             };
@@ -155,9 +162,9 @@ namespace EyE.StateMachine.Samples
             this.yesHandler = yesHandler;
             this.noHandler = noHandler;
         }
-        protected override List<UnityEventSubscription> GetSubscribers()
+        protected override List<ISubscriber> GetSubscribers()
         {
-            return new List<UnityEventSubscription>()
+            return new List<ISubscriber>()
             {
                 new UnityEventSubscription(yesnoDisplay.yesEvent,yesHandler),
                 new UnityEventSubscription(yesnoDisplay.noEvent, noHandler),
@@ -176,7 +183,7 @@ namespace EyE.StateMachine.Samples
     // below are example UI component classes that are used by the example states above
     public class SelectFileNameWindow : UnityEngine.MonoBehaviour
     {
-        public UnityEvent<object> fileNameSelectedEvent;
+        public UnityEvent<string> fileNameSelectedEvent;
         public UnityEvent cancelEvent;
         //UI stuff...
     }
