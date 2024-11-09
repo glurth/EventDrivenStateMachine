@@ -177,7 +177,7 @@ namespace EyE.StateMachine
     }
 
     /// <summary>
-    /// Special kind of state that can be activated via LayerNewState, which will NOT deactivate the calling state, like ChangeState would.
+    /// OPTIONAL  Special kind of state that can be activated via LayerNewState, which will NOT deactivate the calling state, like ChangeState would.
     /// These states can therefore be deactivated without having to initiate a new state, via the Terminate function.
     /// The state it is layered upon needs to be notified when this state is terminated, and so the constructor requires it as a parameter.
     /// </summary>
@@ -200,9 +200,9 @@ namespace EyE.StateMachine
     }
 
     /// <summary>
-    /// This variant has a special constructor that takes and stores a reference to a state instance.
+    /// OPTIONAL  This variant has a special constructor that takes and stores a reference to a state instance.
     /// The state that will be changed to this passed in reference when Revert() is called.
-    /// Can used like a stack by passing "this" to constructor.
+    /// RevertibleEventDrivenState can used like a (linked) stack by passing "this" to the constructor, to Push it onto the stack, and using Revert to Pop it off.
     /// </summary>
     /// <typeparam name="TEventSubscriber"></typeparam>
     abstract public class RevertibleEventDrivenState : EventDrivenState
